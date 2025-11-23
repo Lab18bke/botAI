@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>botAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=gg+sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #313338;
+            --bg-secondary: #2b2d31;
+            --channel-textarea: #383a40;
+            --text-normal: #dbdee1;
+            --text-muted: #949ba4;
+            --header-primary: #f2f3f5;
+            --interactive-normal: #b5bac1;
+            --brand: #5865f2;
+            --background-modifier-accent: rgba(79,84,92,0.48);
+            --background-message-hover: #2e3035;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-normal);
+            font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 48px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-primary);
+            border-bottom: 1px solid #26272d;
+            box-shadow: 0 1px 0 rgba(4,4,5,0.02),0 1px 2px rgba(4,4,5,0.02),0 2px 0 rgba(4,4,5,0.02);
+            z-index: 2;
+        }
+
+        .header-icon {
+            color: var(--text-muted);
+            margin-right: 8px;
+            font-size: 24px;
+        }
+
+        .header-title {
+            font-weight: 600;
+            color: var(--header-primary);
+            font-size: 16px;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            padding: 2px 16px;
+            margin-top: 1.0625rem;
+            display: flex;
+            position: relative;
+        }
+
+        .message:hover {
+            background-color: var(--background-message-hover);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            margin-right: 16px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 14px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar.user { background-color: #ed4245; }
+
+        .message-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .username {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--header-primary);
+            margin-right: 0.25rem;
+        }
+
+        .bot-tag {
+            background-color: var(--brand);
+            color: white;
+            font-size: 0.625rem;
+            padding: 0 0.275rem;
+            border-radius: 0.1875rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            line-height: 1.3;
+            height: 0.9375rem;
+            margin-left: 4px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .timestamp {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-left: 0.25rem;
+        }
+
+        .message-text {
+            font-size: 1rem;
+            line-height: 1.375rem;
+            color: var(--text-normal);
+            white-space: pre-wrap;
+        }
+
+        .input-container {
+            padding: 0 16px 24px;
+            background-color: var(--bg-primary);
+        }
+
+        .input-wrapper {
+            background-color: var(--channel-textarea);
+            border-radius: 8px;
+            padding: 11px 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            color: var(--text-normal);
+            font-size: 1rem;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        input:focus { outline: none; }
+
+        .attachment {
+            margin-top: 8px;
+            background-color: var(--bg-secondary);
+            border: 1px solid #2e3035;
+            border-radius: 4px;
+            padding: 10px;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .attachment:hover { background-color: #36393f; }
+
+        .file-icon {
+            width: 30px;
+            height: 40px;
+            background-color: #202225;
+            border-radius: 3px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-muted);
+            border: 2px solid var(--text-muted);
+        }
+
+        .file-info { display: flex; flex-direction: column; }
+        .filename { color: var(--brand); font-weight: 500; }
+        .filesize { font-size: 12px; color: var(--text-muted); }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; background-color: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background-color: #1a1b1e; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background-color: var(--bg-secondary); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="header-icon">@</span>
+        <span class="header-title">botAI</span>
+    </div>
+
+    <div class="chat-area" id="chatArea">
+        <div class="message">
+            <div class="avatar">
+                <img src="{{ bot_avatar }}" alt="AI">
+            </div>
+            <div class="message-content">
+                <div class="message-header">
+                    <span class="username">botAI</span>
+                    <span class="bot-tag">BOT</span>
+                    <span class="timestamp">Today at <span id="initTime"></span></span>
+                </div>
+                <div class="message-text">Hello! What kind of Discord bot would you like to create today?</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-container">
+        <div class="input-wrapper">
+            <input type="text" id="promptInput" placeholder="Message @botAI" autocomplete="off">
+        </div>
+    </div>
+
+    <script>
+        const BOT_AVATAR_URL = "{{ bot_avatar }}";
+        const USER_AVATAR_URL = "{{ user_avatar }}";
+
+        document.getElementById('initTime').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        const chatArea = document.getElementById('chatArea');
+        const input = document.getElementById('promptInput');
+
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && input.value.trim() !== '') {
+                handleSend();
+            }
+        });
+
+        async function handleSend() {
+            const text = input.value.trim();
+            input.value = '';
+            input.disabled = true;
+
+            addMessage(text, 'user');
+
+            const loadingId = addMessage("Thinking...", 'bot', true);
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: text })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Generation failed');
+                }
+
+                let filename = "discord_bot.zip";
+                const disposition = response.headers.get('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) { 
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+
+                removeMessage(loadingId);
+                addMessage("I've created that for you. Click below to download.", 'bot');
+                addAttachment(filename, url);
+
+            } catch (error) {
+                removeMessage(loadingId);
+                addMessage("Error: " + error.message, 'bot');
+            } finally {
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        function addMessage(text, type, isTemp = false) {
+            const id = 'msg-' + Date.now();
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message';
+            msgDiv.id = id;
+
+            const botAvatar = `<div class="avatar"><img src="${BOT_AVATAR_URL}" alt="AI"></div>`;
+            const userAvatar = `<div class="avatar user"><img src="${USER_AVATAR_URL}" alt="User"></div>`;
+
+            let avatarHtml = type === 'bot' ? botAvatar : userAvatar;
+            let usernameHtml = type === 'bot' 
+                ? '<span class="username">botAI</span><span class="bot-tag">BOT</span>' 
+                : '<span class="username">User</span>';
+
+            msgDiv.innerHTML = `
+                ${avatarHtml}
+                <div class="message-content">
+                    <div class="message-header">
+                        ${usernameHtml}
+                        <span class="timestamp">Today at ${time}</span>
+                    </div>
+                    <div class="message-text">${text}</div>
+                </div>
+            `;
+
+            chatArea.appendChild(msgDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            return id;
+        }
+
+        function removeMessage(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function addAttachment(filename, url) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message';
+            
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            msgDiv.innerHTML = `
+                <div class="avatar">
+                    <img src="${BOT_AVATAR_URL}" alt="AI">
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="username">botAI</span>
+                        <span class="bot-tag">BOT</span>
+                        <span class="timestamp">Today at ${time}</span>
+                    </div>
+                    <div class="attachment" onclick="triggerDownload('${url}', '${filename}')">
+                        <div class="file-icon">ZIP</div>
+                        <div class="file-info">
+                            <span class="filename">${filename}</span>
+                            <span class="filesize">Click to download</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            chatArea.appendChild(msgDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        window.triggerDownload = function(url, filename) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+    </script>
+</body>
+</html>
